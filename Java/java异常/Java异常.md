@@ -9,6 +9,8 @@
 - 异常处理步骤
   - throw try catch finally throws
 - 自定义异常
+  - 示例1
+  - throws常见错误解释
   - public Exception(String message)含义
   - 异常与重写的关系
 - 异常的优缺点
@@ -195,8 +197,6 @@
               e.printStackTrace();
           }
   
-  
-  
       }
   }
   ------------------------------------------------------------------------------
@@ -232,14 +232,14 @@
 
 #### 异常的处理步骤
 
-- 要抛出的异常 必须得是Throwable的子类
+- **要抛出的异常 必须得是Throwable的子类(也可以是别的子类, 反正捕获的时候要符合多态的规则), 这个需要特别注意, 否则可能产生无法捕获的问题**
 
   ```java
   package a;
   
   import java.io.IOException;
   
-  public class A extends Throwable
+  public class A extends Throwable// 成为Throwable的子类, 这样就不会报错了
   {
       public void f()
       {
@@ -251,7 +251,7 @@
   
   public class B
   {
-      public void f() throws A
+      public void f() throws A//把这个报错抛到上一层
       {
           throw new A();
       }
@@ -311,14 +311,93 @@
 
 
 
-- **finally的作用**
+- ##### finally的作用
+
   - 无论`try`所指定的程序块中是否抛出异常, 也无论catch语句的异常类型是否与所抛弃的异常的类型一致, finally中的代码一定会执行
   - **finally语句为异常处理提供一个统一的出口, 使得在控制流程转到程序的其他部分以前, 能够对程序的状态作统一的管理**
   - 通常在finally语句中可以进行资源的清除工作, 如关闭打开的文件, 删除临时文件等
 
 
 
+- ##### throws
+
+  ```java
+  void f() throws A
+  {
+  	...
+  }
+  ```
+
+  - throws A表示调用f方法时f方法<strong style="color:red;">可能</strong>会抛出A类异常, 建议调用方法时, 最好对f方法可能抛出的A类异常进行捕捉
+  - throws A 不表示f方法一定会抛出A类异常
+  - throws A, f方法也可以不抛出A类异常
+  - throws A 不表示调用f方法时, 必须的对A异常进行捕捉
+    - 假设A是RuntimeException子类异常
+    - 由于RuntimeException的子类异常可以处理也可以不处理, 所以编译器允许你调用f方法时, 对f方法抛出的RuntimeException子类异常不进行处理
+  - 强烈建议
+    - 对throws出的所有异常进行处理
+    - 如果一个方法内部已经对A异常进行了处理, 则就不要再throws A
+
+  
+
 ---
 
-#### 自定义异常
+#### 自定义异常(一般不自己定义, 学校叫你自定义属实有意思)
 
+- 示例1
+
+  ```
+  package a;
+  
+  public class A
+  {
+      public int divide(int a, int b) throws DivisorIsZeroException
+      {
+          int m = 0;
+  
+          if(b == 0)
+              throw new DivisorIsZeroException("除数不能为零!\n");
+          else
+              m = a / b;
+  
+          return m;
+      }
+  }
+  ------------------------------------------------------------------------------
+  package a;
+  
+  public class DivisorIsZeroException extends Exception
+  {
+      public DivisorIsZeroException(String name)
+      {
+          super(name);// 调用Exception的构造函数
+      }
+  }
+  ------------------------------------------------------------------------------
+  package a;
+  
+  public class TestExcep_7
+  {
+      public static void main(String[] args)
+      {
+          A aa = new A();
+  
+          try
+          {
+              aa.divide(6, 0);
+          }
+          catch (Exception e)
+          {
+              e.printStackTrace();
+          }
+      }
+  }
+  ------------------------------------------------------------------------------
+  结果:
+  a.DivisorIsZeroException: 除数不能为零!
+  
+  	at a.A.divide(A.java:10)
+  	at a.TestExcep_7.main(TestExcep_7.java:11)
+  ```
+
+  
