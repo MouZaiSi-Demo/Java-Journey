@@ -118,9 +118,9 @@
 
 
 
-- 创建一个新线程的第二种方法
+- <strong style="color:rgb(0, 191, 166);">创建一个新线程的第二种方法</strong>
 
-  - 定义一个实现了 Runnable:接口的类，假定为A
+  - 定义一个实现了 **Runnable**:接口的类，假定为A
 
   - 创建A类对象aa,代码如下
     - ```java
@@ -339,6 +339,47 @@ Thread-0   9
     public static void yield();
     ```
 
+
+
+```java
+package a;
+
+public class TestYield
+{
+    public static void main(String[] args)
+    {
+        MyThread mt = new MyThread();
+        Thread t1 = new Thread(mt);
+        Thread t2 = new Thread(mt);
+
+        t1.setName("线程A");
+        t2.setName("线程B");
+
+        t1.start();
+        t2.start();
+    }
+}
+------------------------------------------------------------------------------
+package a;
+
+public class MyThread implements Runnable
+{
+    public void run()
+    {
+        for(int i = 1; i <= 100 ;i ++)
+        {
+            System.out.println(Thread.currentThread().getName() + "");
+            if(0 == i % 10)
+            {
+                Thread.yield();
+            }
+        }
+    }
+}
+```
+
+
+
 ---
 
 ##### 线程的挂起和恢复
@@ -380,6 +421,139 @@ Thread-0   9
 ---
 
 #### 线程同步(难)
+
+
+
+```java
+if(票数大于0)
+{
+	买一张票
+	票数减一
+}
+```
+
+假设有A, B, C三个窗口同时买票, 如果不做任何处理, CPU会在三个窗口指向某一行代码的时候控制权会发生转化, 这样会发生当A已经进了if内了, 任何卖出了票, 但是在票数减一之前控制权移交给了B, B同理移交给C , 此时会出现一张票被卖了3次的情况....
+
+**问题出在一个这个if应该作为一个事务来处理, 当此事务被处理的时候, 别的线程不能进行处理**
+
+
+
+- 所以需要一个线程同步的方法
+
+
+
+- synchronized关键字的使用
+  - synchronized可以修饰
+    - 一个方法(对象此时是this)
+    - 一个方法内部的某个代码块
+
+
+
+- synchronized修饰代码块
+
+  - 格式
+
+    - ```java
+      synchronized(类对象锁)
+      {
+      	//同步代码块
+      }
+      ```
+
+  - <strong style="color:red;">功能</strong>
+
+    - synchronized(类对象名) 的含义是: 判断该类对象是否已经被其他线程霸占, 如果发现已经被其他线程霸占, 则当前线程陷入等待中, 如果发现该类对象没有被其他线程霸占, 则当前线程霸占住该类对象, 并执行同步代码块或方法, 在当前线程被执行掉同步代码块或者方法的时候, 其他线程将无法再执行这块代码(因为当前线程已经霸占了该对象), 当前线程执行完后会自动释放对该对象的霸占, 此时其他线程会互相竞争对该对象的霸占, 最终CPU会选择其中的某一个线程去执行
+    - 最终导致的结果就是: <strong style="color:red;">一个线程正在操作某资源的时候, 将不允许其他线程操作该资源, 即一次只允许一个线程处理该资源</strong>
+
+
+
+- 实例1(第二种方法, 该方法更优, 不用写static)
+
+  ```java
+  public class A implements Runnable
+  {
+      public static int tickets = 100;
+      String str = new String("hh");
+      public void run()
+      {
+          while(true)
+          {
+              synchronized (str)
+              {
+                  if(tickets > 0)
+                  {
+                      System.out.printf("%s线程正在卖出剩余的第%d张票\n", Thread.currentThread().getName(), tickets);
+                      tickets --;
+                  }
+                  else
+                  {
+                      break;
+                  }
+              }
+          }
+      }
+  }
+  ------------------------------------------------------------------------------
+  public class TestTickets
+  {
+      public static void main(String[] args)
+      {
+          A aa = new A();
+          Thread t1 = new Thread(aa);
+          t1.start();
+  
+          Thread t2 = new Thread(aa);
+          t2.start();
+      }
+  }
+  ```
+
+  
+
+实例2(用创建线程的第一种方法)
+
+```java
+public class A extends Thread
+{
+    public static int tickets = 100;
+    public static String str = new String("hh");
+    public void run()
+    {
+        while(true)
+        {
+            synchronized (str)
+            {
+                if(tickets > 0)
+                {
+                    System.out.printf("%s线程正在卖出剩余的第%d张票\n", Thread.currentThread().getName(), tickets);
+                    tickets --;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+}
+------------------------------------------------------------------------------
+public class TestTickets
+{
+    public static void main(String[] args)
+    {
+        A aa1 = new A();
+        aa1.start();
+
+        A aa2 = new A();
+        aa2.start();
+    }
+}
+```
+
+
+
+- 需要注意的点
+  - 注意`synchronized`不要加在`run`方法的void前, 这样会导致只能一个线程一直占用该资源, 直到`run`执行完
 
 
 
