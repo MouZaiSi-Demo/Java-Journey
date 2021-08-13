@@ -193,9 +193,10 @@ System.out.printf("%s正在运行\n", Thread.currentThread().getName());//Thread
 isAlive();// 判断线程是否还"活着", 即线程是否还未终止
 getPriority();// 获得线程的优先级数值
 setPriority();// 设置线程的优先级数值
-Thread.sleep();// 将当前线程睡眠指定毫秒数, 这个算"阻塞", 需要先取消阻塞
+Thread.sleep();// 将当前线程睡眠指定毫秒数, 这个算"阻塞", 需要先取消阻塞, 然后sleep完会自动被唤醒
 join();// 调用某线程的该方法, 将当前线程与该线程"合并", 即等待该线程结束, 再恢复当前线程的运行
 yield();// 让出CPU, 当前线程进入就绪队列等待调度, 这个是重新成为调度
+
 wait();// 当前线程进入对象的wait pool
 notify()/notifyAll();// 唤醒对象的wait pool中的一个/所有等待线程
 ```
@@ -444,8 +445,9 @@ if(票数大于0)
 
 - synchronized关键字的使用
   - synchronized可以修饰
-    - 一个方法(对象此时是this)
+    - 一个方法(对象此时是this所指向的对象)
     - 一个方法内部的某个代码块
+    - <strong style="color:red;">霸占的专业术语是`锁定`, 霸占住的那个对象专业术语叫做`监听器`</strong>
 
 
 
@@ -510,7 +512,8 @@ if(票数大于0)
 
   
 
-实例2(用创建线程的第一种方法)
+- 实例2(用创建线程的第一种方法)
+
 
 ```java
 public class A extends Thread
@@ -554,6 +557,38 @@ public class TestTickets
 
 - 需要注意的点
   - 注意`synchronized`不要加在`run`方法的void前, 这样会导致只能一个线程一直占用该资源, 直到`run`执行完
+  - 如果有 无限循环加break的写法 也不能在while写`synchronized`
 
 
+
+- 实例3(使用String的时候不new一个对象, 这样字符串是存储在数据区的并且不进行拷贝)
+
+  ```java
+  public class A implements Runnable
+  {
+      public static int tickets = 100;
+      //public static String str = new String("hh");
+      public void run()
+      {
+          String lock = "hh";
+          while(true)
+          {
+              synchronized (lock)
+              {
+                  if(tickets > 0)
+                  {
+                      System.out.printf("%s线程正在卖出剩余的第%d张票\n", Thread.currentThread().getName(), tickets);
+                      tickets --;
+                  }
+                  else
+                  {
+                      break;
+                  }
+              }
+          }
+      }
+  }
+  ```
+
+  
 
