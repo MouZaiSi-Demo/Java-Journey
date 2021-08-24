@@ -257,7 +257,7 @@ class Student
     @Override
     public int hashCode()
     {
-        return id * this.name.hashCode();// 其实不是乘也是可以的, 这样的式子要相等, 首先id和另个元素的其中参数要一样,name的参数要和另一个一样
+        return id * this.name.hashCode();
     }
 }
 
@@ -271,6 +271,8 @@ public class TestSet
         S.add(new Student(1000, "时崎狂三"));
         S.add(new Student(1000, "时崎狂三"));
         S.add(new Student(1002, "鸢一折纸"));
+        S.add(new Student(1002, "鸢一折纸"));
+        S.add(new Student(1001, "五河琴里"));
         S.add(new Student(1001, "五河琴里"));
 
         System.out.println(S);
@@ -286,5 +288,50 @@ public class TestSet
 
 <img src="img/预备知识-哈希表.png" alt="预备知识-哈希表" style="zoom: 60%;" />
 
-- 因为哈希表的不完美性, "现实骨感...", 数组和链表得以保存
+- 因为哈希表的**不完美性**, "现实骨感...", 数组和链表得以保存
+
+
+
+---
+
+#### 什么容器必须重写equals方法和hashCode方法
+
+<img src="img/什么容器必须重写equals方法和hashCode方法.png" alt="什么容器必须重写equals方法和hashCode方法" style="zoom:60%;" />
+
+<img src="img/什么容器必须重写equals方法和hashCode方法2.png" alt="什么容器必须重写equals方法和hashCode方法2" style="zoom:60%;" />
+
+---
+
+#### 如何重写equals方法和hashCode方法
+
+##### equasl()比较简单
+
+```java
+@Override
+    public boolean equals(Object ob)
+    {
+        类名 对象名 = (类名) ob;
+        return 对象名.id == this.id && 对象名.name == this.name;
+    }
+```
+
+
+
+##### hashCode()有一坨...
+
+```java
+// 借助java公司自己写的Integer的, 只能用于整数
+public int hashCode() // Integer(1)
+{
+    return new Integer(this.值).hashCode();
+}
+
+//借助string属性, 因为string都是对象, 然后string也已经重写了hashCode()
+public int hashCode()
+{
+    return 另一个需要比较的属性 * string对象.hashCode();
+}
+```
+
+
 
